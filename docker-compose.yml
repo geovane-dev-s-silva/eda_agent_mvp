@@ -1,0 +1,27 @@
+version: "3.9"
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: eda_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./db:/app/db
+    environment:
+      - DATABASE_URL=sqlite:///app/db/eda.db
+    command: uvicorn eda_agent:app --host 0.0.0.8501 --port 8000 --reload --reload-dir eda_agent.py --reload-dir data_processing.py --reload-dir models.py # Adjusted reload directories 
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: eda_frontend
+    ports:
+      - "8501:8501"
+    environment:
+      - EDA_API_BASE=http://backend:8000
+    depends_on:
+      - backend
