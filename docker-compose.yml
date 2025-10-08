@@ -10,10 +10,6 @@ services:
     volumes:
       - ./data:/app/data
       - ./db:/app/db
-    environment:
-      - DATABASE_URL=sqlite:///app/db/eda.db
-    command: uvicorn eda_agent:app --host 0.0.0.8501 --port 8000 --reload --reload-dir eda_agent.py --reload-dir data_processing.py --reload-dir models.py # Adjusted reload directories 
-
   frontend:
     build:
       context: .
