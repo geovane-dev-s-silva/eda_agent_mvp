@@ -4,16 +4,26 @@ agent_autoinsight.py
 Gera insights automáticos para um dataset (heurísticas + LLM quando disponível)
 Usa funções de eda_agent para estatísticas e plots.
 """
+
 import json
 import uuid
 import time
 
-from eda_agent import quick_summary, detect_outliers_iqr, histogram_plot, correlation_heatmap, DB_CONN
+from eda_agent import (
+    quick_summary,
+    detect_outliers_iqr,
+    histogram_plot,
+    correlation_heatmap,
+    DB_CONN,
+)
+
 try:
     from call_gemini import call_gemini
 except Exception:
+
     def call_gemini(prompt: str) -> str:
         return f"[Stub LLM] (autoinsight) {prompt[:300]}..."
+
 
 def generate_insights(dataset_id: str, df):
     """
@@ -33,7 +43,9 @@ def generate_insights(dataset_id: str, df):
         median = colinfo.get("median")
         std = colinfo.get("std")
         n_missing = colinfo.get("missing", 0)
-        insights.append(f"Coluna '{col}': média={mean}, mediana={median}, desvio padrão={std}, missing={n_missing}.")
+        insights.append(
+            f"Coluna '{col}': média={mean}, mediana={median}, desvio padrão={std}, missing={n_missing}."
+        )
         try:
             plots[f"hist_{col}"] = histogram_plot(df, col)
         except Exception:
@@ -44,7 +56,9 @@ def generate_insights(dataset_id: str, df):
         try:
             oi = detect_outliers_iqr(df[col].dropna())
             if oi["count"] > 0:
-                insights.append(f"A coluna '{col}' possui {oi['count']} outliers (limites {oi['lower']:.2f} / {oi['upper']:.2f}).")
+                insights.append(
+                    f"A coluna '{col}' possui {oi['count']} outliers (limites {oi['lower']:.2f} / {oi['upper']:.2f})."
+                )
         except Exception:
             pass
 
@@ -55,6 +69,7 @@ def generate_insights(dataset_id: str, df):
             # find max abs corr pair
             import numpy as np
             import pandas as pd
+
             corr_df = pd.DataFrame(corr_dict)
             abs_corr = corr_df.abs()
             # zero diagonal and lower triangle
@@ -65,25 +80,54 @@ def generate_insights(dataset_id: str, df):
             maxval = arr[i, j]
             if maxval > 0:
                 colnames = list(corr_df.columns)
-                insights.append(f"As colunas '{colnames[i]}' e '{colnames[j]}' têm correlação absoluta alta (r={maxval:.2f}).")
+                insights.append(
+                    f"As colunas '{colnames[i]}' e '{colnames[j]}' têm correlação absoluta alta (r={maxval:.2f})."
+                )
         except Exception:
             pass
 
     # 4) Narrativa via LLM (resumo executivo)
     try:
-        prompt = f"Você é um analista de dados. Resuma em até 5 pontos acionáveis os resultados a seguir e indique 2 riscos/limitações.\nResumo estatístico: {json.dumps(summary['schema'])}\nInsights detectados por heurística: {insights[:6]}\n"
+        prompt = f"""
+Você é um cientista de dados sênior responsável por gerar um *Executive Summary* 
+para uma análise exploratória de dados (EDA). Use o conteúdo fornecido para extrair 
+os padrões mais importantes, destacando informações úteis para tomada de decisão.
+
+Siga estas diretrizes:
+1. Liste **até 5 insights principais** (use linguagem clara, concisa e quantitativa).
+2. Inclua **interpretações técnicas** quando relevante (média, correlação, variação, outliers).
+3. Aponte **2 riscos ou limitações** da análise (por exemplo: valores ausentes, poucos registros, colunas desbalanceadas).
+4. Finalize com uma **síntese executiva** de 2 linhas, respondendo: 
+   “O que esses dados indicam sobre o fenômeno observado?”
+
+Contexto disponível:
+- Estrutura e tipos de dados: {json.dumps(summary['schema'])[:2000]}
+- Insights heurísticos iniciais: {insights[:6]}
+
+Gere a resposta em formato de texto estruturado com marcadores.
+"""
+
         llm_text = call_gemini(prompt)
         insights.insert(0, f"Narrativa LLM: {llm_text}")
     except Exception as e:
-        insights.insert(0, f"[LLM-fallback] não foi possível gerar narrativa: {str(e)[:200]}")
+        insights.insert(
+            0, f"[LLM-fallback] não foi possível gerar narrativa: {str(e)[:200]}"
+        )
 
     # 5) Persistir insights no DB
     try:
         cur = DB_CONN.cursor()
         for text in insights:
-            cur.execute("INSERT INTO insights VALUES (?,?,?,?,?)", (
-                str(uuid.uuid4()), dataset_id, time.strftime("%Y-%m-%d %H:%M:%S"), text, 0
-            ))
+            cur.execute(
+                "INSERT INTO insights VALUES (?,?,?,?,?)",
+                (
+                    str(uuid.uuid4()),
+                    dataset_id,
+                    time.strftime("%Y-%m-%d %H:%M:%S"),
+                    text,
+                    0,
+                ),
+            )
         DB_CONN.commit()
     except Exception:
         # non-fatal; continue
