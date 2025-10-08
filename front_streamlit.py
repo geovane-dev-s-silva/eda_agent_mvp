@@ -1,16 +1,23 @@
-import streamlit as st
-import requests
-import pandas as pd
+# --- Frontend principal do agente EDA ---
+import streamlit as st  # UI web
+import requests  # Requisições HTTP para backend
+import pandas as pd  # Manipulação local de CSV
 import os
 
+
+# Configuração da página e API
 st.set_page_config(page_title="EDA Multiagente", layout="wide")
 API_BASE = os.getenv("EDA_API_BASE", "http://backend:8000")
 
+
+# Título e upload de arquivos
 st.title("🔍 Agente de Exploração de Dados (EDA)")
 uploaded_files = st.file_uploader(
     "Envie um ou mais arquivos CSV", type=["csv"], accept_multiple_files=True
 )
 
+
+# Upload e análise inicial
 if uploaded_files:
     if st.button("Enviar para análise"):
         with st.spinner("Processando..."):
@@ -25,10 +32,13 @@ if uploaded_files:
             else:
                 st.error(r.text)
 
+
+# Interface principal: abas para cada funcionalidade
 if "dataset_id" in st.session_state:
     ds = st.session_state["dataset_id"]
     tabs = st.tabs(["Resumo", "Chat", "Outliers", "Correlação", "Relatório"])
 
+    # Resumo e download do relatório
     with tabs[0]:
         st.subheader("Resumo dos Dados")
         st.write(f"ID: {ds}")
@@ -39,6 +49,7 @@ if "dataset_id" in st.session_state:
                 "📄 Baixar Relatório", resp.content, file_name="relatorio.pdf"
             )
 
+    # Chat com o dataset
     with tabs[1]:
         st.subheader("Chat com o Dataset")
         question = st.text_input("Faça uma pergunta:")
@@ -52,6 +63,7 @@ if "dataset_id" in st.session_state:
             else:
                 st.error(r.text)
 
+    # Outliers
     with tabs[2]:
         st.subheader("Detecção de Outliers")
         df = pd.read_csv(f"data/{ds}.csv")
@@ -68,6 +80,7 @@ if "dataset_id" in st.session_state:
                 st.json(data["stats"])
                 st.image(data["plot"])
 
+    # Correlação
     with tabs[3]:
         st.subheader("Correlação entre variáveis")
         r = requests.get(f"{API_BASE}/api/correlation", params={"dataset_id": ds})

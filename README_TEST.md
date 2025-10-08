@@ -1,30 +1,69 @@
-# EDA Agent MVP - Test Instructions
+# EDA Agent MVP
 
-## Requirements
-- Python 3.10+
-- Install required packages:
-  pip install flask pandas matplotlib scikit-learn streamlit requests
+Um agente de exploração de dados (EDA) automatizado, fácil de usar, para análise exploratória de datasets CSV.
 
-## Run backend (Flask)
-$ python /mnt/data/agente_mvp.py
+### Como inserir sua chave de API Gemini (perguntas em linguagem natural)
 
-This will start the API at http://0.0.0.0:8000
+Para que o agente responda perguntas em linguagem natural, é necessário obter uma chave de API Gemini (Google):
 
-## Run frontend (Streamlit)
-In another terminal:
-$ streamlit run /mnt/data/front_streamlit.py
+1. Crie uma conta e gere sua chave em: https://aistudio.google.com/app/apikey
+2. No arquivo `docker-compose.yml`, localize a linha:
+  ```yaml
+  - GEMINI_API_KEY=your_google_gemini_api_key_here
+  ```
+3. Substitua `your_google_gemini_api_key_here` pela sua chave real, mantendo as aspas.
+4. Salve o arquivo e rode o comando:
+  ```
+  docker-compose up --build
+  ```
 
-Open the Streamlit UI and upload CSV files.
+Pronto! Agora o agente poderá responder perguntas em linguagem natural usando a API Gemini.
 
-## Test with curl
-Upload a CSV:
-curl -X POST "http://localhost:8000/api/upload" -F "files=@/path/to/your.csv"
+## Principais Funcionalidades
+- Upload de um ou mais arquivos CSV.
+- Resumo automático do dataset (esquema, estatísticas, gráficos).
+- Perguntas em linguagem natural sobre os dados (ex: "Qual a média da coluna valor?").
+- Detecção de outliers, análise de correlação, clustering KMeans.
+- Geração de relatório PDF consolidado.
+- Memória de insights e histórico de perguntas.
 
-Get summary:
-curl "http://localhost:8000/api/summary?dataset_id=<dataset_id_returned_from_upload>"
+## Como rodar 
 
-## Notes
-- Uploaded CSVs are stored in ./data as <dataset_id>.csv
-- A simple SQLite DB memory.db stores dataset metadata and queries.
-- This is the Sprint A MVP: upload -> schema inference -> basic plots as base64 images -> summary endpoint.
-- Next steps: implement /api/query (NLP), outlier endpoints, clustering, and persistent insight saving.
+**Pré-requisitos:**
+- [Instale o Docker Desktop](https://www.docker.com/products/docker-desktop/)
+
+**Passos:**
+1. Abra o terminal na pasta do projeto.
+2. Execute:
+   ```
+   docker-compose up --build
+   ```
+3. Aguarde a mensagem de que os serviços "eda_backend" e "eda_frontend" estão rodando.
+4. Acesse [http://localhost:8501] no navegador.
+5. Envie seus arquivos CSV e explore as abas: Resumo, Chat, Outliers, Correlação, Relatório.
+
+**Dica:** Não é necessário instalar Python ou pacotes manualmente!
+
+## Fluxo de uso
+1. Faça upload de um arquivos no formato CSV.
+2. Veja o resumo automático e gráficos.
+3. Use o chat para perguntar em português sobre os dados.
+4. Explore outliers, correlações e clusters nas abas.
+5. Baixe o relatório PDF com tudo consolidado.
+
+## Estrutura técnica
+- Backend: Flask (agente_mvp.py), SQLite, Pandas, Matplotlib, Scikit-learn, Reportlab.
+- Frontend: Streamlit (front_streamlit.py).
+- Orquestração: Docker Compose.
+
+## Dúvidas comuns
+- **Onde ficam meus dados?**
+  - Os arquivos enviados ficam na pasta `data/`.
+  - O banco de dados (insights, histórico) fica em `db/`.
+- **Posso rodar sem Docker?**
+  - Sim, mas Docker é recomendado para evitar problemas de dependências.
+- **Como parar?**
+  - Use `CTRL+C` no terminal ou `docker-compose down`.
+
+---
+Projeto MVP para exploração de dados sem complicação. Dúvidas? Abra uma issue ou peça ajuda!

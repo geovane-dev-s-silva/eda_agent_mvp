@@ -12,11 +12,16 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
 
+
+# Caminho do banco de dados SQLite (persistência dos metadados e histórico)
 DB_PATH = os.environ.get("EDA_DB_PATH", "db/memory.db")
 os.makedirs(os.path.dirname(DB_PATH) or ".", exist_ok=True)
 
 
 def init_db(db_path=DB_PATH):
+    """
+    Inicializa o banco SQLite e garante as tabelas necessárias.
+    """
     conn = sqlite3.connect(db_path, check_same_thread=False)
     cur = conn.cursor()
     cur.execute(
@@ -61,6 +66,9 @@ DB_CONN = init_db()
 
 
 def save_dataset_metadata(dataset_id, name, df, filepath):
+    """
+    Salva ou atualiza metadados do dataset na tabela datasets.
+    """
     cur = DB_CONN.cursor()
     schema = infer_schema(df)
     cur.execute(
@@ -79,6 +87,9 @@ def save_dataset_metadata(dataset_id, name, df, filepath):
 
 
 def save_query(dataset_id, question, response, raw, source):
+    """
+    Salva uma pergunta e resposta no histórico (tabela queries).
+    """
     cur = DB_CONN.cursor()
     qid = str(uuid.uuid4())
     cur.execute(
@@ -98,6 +109,9 @@ def save_query(dataset_id, question, response, raw, source):
 
 
 def infer_schema(df):
+    """
+    Infere o esquema de um DataFrame: tipos, missing, amostras, estatísticas.
+    """
     schema = {}
     for col in df.columns:
         colseries = df[col]
@@ -146,6 +160,9 @@ def infer_schema(df):
 
 
 def plot_to_base64(fig):
+    """
+    Converte um matplotlib figure para string base64 (para frontend).
+    """
     buf = io.BytesIO()
     fig.savefig(buf, format="png", bbox_inches="tight")
     buf.seek(0)
@@ -155,6 +172,9 @@ def plot_to_base64(fig):
 
 
 def histogram_plot(df, col):
+    """
+    Gera histograma em base64 para uma coluna numérica.
+    """
     fig, ax = plt.subplots(figsize=(6, 4))
     try:
         df[col].dropna().astype(float).plot(kind="hist", bins=30, ax=ax)
@@ -165,6 +185,9 @@ def histogram_plot(df, col):
 
 
 def boxplot_plot(df, col):
+    """
+    Gera boxplot em base64 para uma coluna numérica.
+    """
     fig, ax = plt.subplots(figsize=(4, 3))
     try:
         df[col].dropna().astype(float).plot(kind="box", ax=ax)
@@ -175,6 +198,9 @@ def boxplot_plot(df, col):
 
 
 def scatter_plot(df, x, y):
+    """
+    Gera scatter plot entre duas colunas numéricas.
+    """
     fig, ax = plt.subplots(figsize=(5, 4))
     ax.scatter(df[x], df[y], alpha=0.6)
     ax.set_xlabel(x)
@@ -184,6 +210,9 @@ def scatter_plot(df, x, y):
 
 
 def correlation_heatmap(df, numeric_cols):
+    """
+    Gera heatmap de correlação e retorna matriz + imagem base64.
+    """
     corr = df[numeric_cols].corr()
     fig, ax = plt.subplots(figsize=(6, 5))
     cax = ax.matshow(corr)
@@ -197,6 +226,9 @@ def correlation_heatmap(df, numeric_cols):
 
 
 def detect_outliers_iqr(series):
+    """
+    Detecta outliers em uma série numérica usando o método IQR.
+    """
     q1 = series.quantile(0.25)
     q3 = series.quantile(0.75)
     iqr = q3 - q1
@@ -211,10 +243,13 @@ def detect_outliers_iqr(series):
 
 
 def load_csv_bytes(content_bytes):
-    # Try to infer delimiter, fallback to comma
+    """
+    Lê bytes de CSV e tenta inferir o delimitador automaticamente.
+    """
+    # Tentar inferir delimitador, retornar para vírgula
     try:
         sample = content_bytes.decode("utf-8", errors="ignore").splitlines()[:10]
-        # basic heuristic: semicolon or comma
+        # heurística básica: ponto e vírgula ou vírgula
         if any(";" in line for line in sample):
             sep = ";"
         elif any("\t" in line for line in sample):
@@ -228,6 +263,9 @@ def load_csv_bytes(content_bytes):
 
 
 def quick_summary(df):
+    """
+    Gera resumo rápido: esquema, gráficos principais, heatmap de correlação.
+    """
     numeric_cols = [c for c in df.columns if pd.api.types.is_numeric_dtype(df[c])]
     schema = infer_schema(df)
     plots = {}
