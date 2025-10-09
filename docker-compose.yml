@@ -19,7 +19,7 @@ services:
     ports:
       - "8501:8501"
     environment:
-      - GEMINI_API_KEY='AIzaSyBnUeHGhu6045SeBaAVxGGG6b0NlFmUnYE'
+      - GEMINI_API_KEY='GEMINI_API_KEY_HERE'
       - EDA_API_BASE=http://backend:8000
     volumes:
       - ./data:/app/data
