@@ -67,3 +67,114 @@ Pronto! Agora o agente poderá responder perguntas em linguagem natural usando a
 
 ---
 Projeto MVP para exploração de dados sem complicação. Dúvidas? Abra uma issue ou peça ajuda!
+
+## Sobre:
+Agentes Autônomos – Relatório da Atividade
+1. Framework Escolhida
+Para o desenvolvimento do EDA Agent MVP, foi escolhida uma arquitetura baseada em Docker Compose com os seguintes componentes principais:
+
+Backend: Flask (Python) com endpoints RESTful
+
+Frontend: Streamlit para interface web interativa
+
+Banco de Dados: SQLite para persistência de metadados e histórico
+
+Orquestração: Docker Compose para containerização
+
+Processamento de Dados: Pandas, NumPy, Scikit-learn
+
+Visualização: Matplotlib
+
+IA Generativa: Google Gemini API (opcional)
+
+2. Estrutura da Solução
+Arquitetura Modular
+A solução foi estruturada em módulos especializados:
+
+text
+EDA Agent MVP/
+├── agente_mvp.py (Backend principal - Flask)
+├── front_streamlit.py (Frontend - Streamlit)
+├── eda_agent.py (Núcleo de análise exploratória)
+├── agent_memory.py (Gerenciamento de memória)
+├── agent_autoinsight.py (Geração de insights automáticos)
+├── call_gemini.py (Integração com LLM)
+├── requirements.txt
+├── docker-compose.yml
+└── README.md
+
+Fluxo de Processamento
+Upload de Dados: Usuário envia arquivos CSV via interface Streamlit
+
+Processamento Inicial:
+
+Combinação de múltiplos arquivos (quando aplicável)
+
+Inferência automática de schema e estatísticas
+
+Geração de gráficos básicos
+
+Análise Interativa:
+
+Chat em linguagem natural
+
+Detecção de outliers
+
+Análise de correlação
+
+Clustering K-means
+
+Persistência:
+
+Metadados no SQLite
+
+Histórico de perguntas e respostas
+
+Insights gerados automaticamente
+
+Componentes Principais
+Backend (Flask):
+
+/api/upload - Processamento de uploads
+
+/api/query - Processamento de perguntas em NL
+
+/api/outliers - Detecção de outliers
+
+/api/correlation - Análise de correlação
+
+/api/clusters - Clusterização K-means
+
+/api/report - Geração de relatório PDF
+
+Frontend (Streamlit):
+
+Interface tabular para diferentes funcionalidades
+
+Visualização interativa de gráficos
+
+Gerenciamento de estado da sessão
+
+Sidebar com insights e memória
+
+3. Códigos Fonte
+
+agente_mvp.py
+
+front_streamlit.py
+
+eda_agent.py
+
+agent_memory.py
+
+agent_autoinsight.py
+
+call_gemini.py
+
+requirements.txt
+
+docker-compose.yml
+
+Data de Geração: 09 de Outubro de 2025
+Versão do Agente: MVP 1.0
+Capacidades: Análise exploratória, processamento de linguagem natural, detecção de padrões, geração de insights automáticos
